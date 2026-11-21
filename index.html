@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<!--page-->
+<title>Face Dispenser</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap">
+<style>
+/* Layout: one sketchbook page. The head sits in the upper middle, fallen faces pile on the bottom edge, hand-lettered notes in the corners. */
+:root {
+  --paper: #e9e3d2;
+  --grid: #cfc8b4;
+  --ink: #171614;
+  --head: #f6f1e4;
+  --tongue: #ee8f86;
+  --hand: "Gochi Hand", "Marker Felt", "Chalkboard SE", "Comic Sans MS", cursive;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+body {
+  margin: 0;
+  overflow: hidden;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  color: var(--ink);
+  font-family: var(--hand);
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: pointer; }
+.note {
+  position: fixed;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  line-height: 1.05;
+  pointer-events: none;
+  margin: 0;
+}
+#title {
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  left: max(16px, env(safe-area-inset-left, 0px));
+  font-size: clamp(22px, 5vw, 34px);
+  font-weight: 400;
+  transform: rotate(-3deg);
+}
+#count {
+  top: calc(env(safe-area-inset-top, 0px) + 18px);
+  right: max(16px, env(safe-area-inset-right, 0px));
+  font-size: clamp(15px, 3.4vw, 20px);
+  text-align: right;
+  transform: rotate(2deg);
+}
+#count b { font-size: 1.9em; font-weight: 400; display: block; font-variant-numeric: tabular-nums; }
+#hint {
+  left: 0; right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 26%);
+  text-align: center;
+  font-size: clamp(16px, 4vw, 22px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  transition: opacity .6s;
+}
+#hint small { display: block; font-size: .72em; opacity: .7; margin-top: 4px; }
+#hint.gone { opacity: 0; }
+#sound {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 84px);
+  right: max(16px, env(safe-area-inset-right, 0px));
+  font: inherit; font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--ink); background: var(--head);
+  border: 2.5px solid var(--ink); border-radius: 12px 9px 13px 8px;
+  padding: 5px 10px; cursor: pointer;
+}
+#sound:focus-visible { outline: 3px dashed var(--ink); outline-offset: 3px; }
+</style>
+
+<canvas id="c" aria-label="A blocky head with a clay face in a window. Press and hold to push the face out."></canvas>
+<h1 id="title" class="note">Face<br>dispenser</h1>
+<p id="count" class="note"><b id="n">0</b>fallin' faces</p>
+<p id="hint" class="note">Press &amp; hold<small>quick tap = new expression</small></p>
+<button id="sound" type="button">Sound on</button>
+
+<script>
+(() => {
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const css = getComputedStyle(document.documentElement);
+const INK = css.getPropertyValue('--ink').trim() || '#171614';
+const HEAD = css.getPropertyValue('--head').trim() || '#f6f1e4';
+const TONGUE = css.getPropertyValue('--tongue').trim() || '#ee8f86';
+const CLAY = ['#f3b9a2', '#f5d36a', '#a3d3c2', '#aac6f1', '#f29f7d', '#cbb3ea', '#bfe093', '#f4a9c4', '#efe8d6'];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- geometry (head units; front of the head is centred on 0,0) ---------- */
+const FRONT = { w: 220, h: 262, r: 44 };
+const BACK = [-72, -52];            // the head's depth runs up-left
+const HOLE = { x: 0, y: -28, s: 150, r: 32 };
+const PUSH = [96, 70];              // a full push moves the face this far, toward the viewer
+let W = 0, H = 0, S = 1, DPR = 1, HX = 0, HY = 0, FLOOR = 0;
+let boil = 0;
+
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+function hash(n) { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+
+function rr(cx, cy, w, h, r, n = 7) {
+  const hw = w / 2, hh = h / 2, pts = [];
+  const cs = [[cx + hw - r, cy - hh + r, -90], [cx + hw - r, cy + hh - r, 0], [cx - hw + r, cy + hh - r, 90], [cx - hw + r, cy - hh + r, 180]];
+  for (const [x, y, a0] of cs) for (let i = 0; i <= n; i++) {
+    const a = (a0 + 90 * i / n) * Math.PI / 180;
+    pts.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+  }
+  return pts;
+}
+const shift = (pts, v, k = 1) => pts.map(p => [p[0] + v[0] * k, p[1] + v[1] * k]);
+function hull(points) {
+  const p = points.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const q of p) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+  for (let i = p.length - 1; i >= 0; i--) { const q = p[i]; while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+  lo.pop(); up.pop();
+  return lo.concat(up);
+}
+function arc(cx, cy, rx, ry, a0, a1, n = 10) {
+  const pts = [];
+  for (let i = 0; i <= n; i++) { const a = (a0 + (a1 - a0) * i / n) * Math.PI / 180; pts.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]); }
+  return pts;
+}
+
+/* Hand-drawn line: resample the path, then push it around with two slow waves that change a few times a second. */
+function wobble(pts, closed, seed, amp) {
+  const src = closed ? pts.concat([pts[0]]) : pts, out = [];
+  let total = 0;
+  for (let i = 0; i < src.length - 1; i++) {
+    const [ax, ay] = src[i], [bx, by] = src[i + 1];
+    const len = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(len / 9));
+    for (let j = 0; j < n; j++) out.push([ax + (bx - ax) * j / n, ay + (by - ay) * j / n, total + len * j / n]);
+    total += len;
+  }
+  if (!closed) out.push([src[src.length - 1][0], src[src.length - 1][1], total]);
+  const k = seed * 7.3 + boil * 13.7;
+  const p1 = hash(k) * 6.28, p2 = hash(k + 1) * 6.28, p3 = hash(k + 2) * 6.28, p4 = hash(k + 3) * 6.28;
+  const f1 = 6.283 * Math.max(1, Math.round(total / 150)) / (total || 1);
+  const f2 = 6.283 * Math.max(2, Math.round(total / 55)) / (total || 1);
+  return out.map(([x, y, l]) => [
+    x + amp * (Math.sin(l * f1 + p1) * 0.65 + Math.sin(l * f2 + p2) * 0.35),
+    y + amp * (Math.sin(l * f1 + p3) * 0.65 + Math.sin(l * f2 + p4) * 0.35)]);
+}
+function draw(pts, o = {}) {
+  const closed = o.closed !== false;
+  const w = wobble(pts, closed, o.seed || 1, o.amp == null ? 1.5 : o.amp);
+  ctx.beginPath();
+  w.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+  if (closed) ctx.closePath();
+  if (o.fill) { ctx.fillStyle = o.fill; ctx.fill(); }
+  if (o.stroke !== false) { ctx.strokeStyle = o.stroke || INK; ctx.lineWidth = o.lw || 4; ctx.stroke(); }
+}
+const line = (pts, seed, lw = 4, amp = 1) => draw(pts, { closed: false, seed, lw, amp });
+function dot(x, y, r, fill = INK) { ctx.beginPath(); ctx.arc(x, y, r, 0, 6.3); ctx.fillStyle = fill; ctx.fill(); }
+
+/* ---------- faces ---------- */
+const N_EYES = 9, N_BROWS = 5, N_NOSE = 6, N_MOUTH = 10, N_EXTRA = 6;
+function newFace(color) {
+  return {
+    color: color || pick(CLAY),
+    eyes: Math.floor(rnd(0, N_EYES)),
+    brows: Math.random() < 0.45 ? 0 : Math.floor(rnd(1, N_BROWS)),
+    nose: Math.floor(rnd(0, N_NOSE)),
+    mouth: Math.floor(rnd(0, N_MOUTH)),
+    extra: Math.random() < 0.5 ? 0 : Math.floor(rnd(1, N_EXTRA)),
+    gap: rnd(22, 32), ey: rnd(-20, -8), my: rnd(30, 40), look: [rnd(-2.5, 2.5), rnd(-2, 2)],
+    seed: Math.floor(rnd(1, 9999)),
+  };
+}
+
+// Draws the features on a 150-unit clay tile centred on 0,0.
+function drawFeatures(f, blink) {
+  const sd = f.seed, g = f.gap, ey = f.ey, my = f.my;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const eye = (x, kind, i) => {
+    if (blink && [0, 1, 5, 8].includes(f.eyes)) return line([[x - 7, ey], [x + 7, ey]], sd + i, 4);
+    switch (kind) {
+      case 0: dot(x, ey, 5.5); break;
+      case 1: draw(arc(x, ey, 10, 10, 0, 330, 14), { fill: '#fff', seed: sd + i, lw: 3.5, amp: .8 }); dot(x + f.look[0], ey + f.look[1], 3.6); break;
+      case 2: line(arc(x, ey + 3, 8, 8, 200, 340), sd + i); break;
+      case 3: line([[x - 8, ey], [x + 8, ey]], sd + i); break;
+      case 4: { const d = i ? -1 : 1; line([[x - 7 * d, ey - 7], [x + 6 * d, ey], [x - 7 * d, ey + 7]], sd + i); break; }
+      case 5: { const r = i ? 6.5 : 12; draw(arc(x, ey, r, r, 0, 330, 14), { fill: '#fff', seed: sd + i, lw: 3.5, amp: .8 }); dot(x + f.look[0], ey + f.look[1], r * .36); break; }
+      case 6: if (i) line(arc(x, ey + 3, 8, 8, 200, 340), sd + i); else dot(x, ey, 5.5); break;
+      case 7: line([[x - 6, ey - 6], [x + 6, ey + 6]], sd + i); line([[x + 6, ey - 6], [x - 6, ey + 6]], sd + i + 9); break;
+      case 8: ctx.beginPath(); ctx.ellipse(x, ey, 4.5, 9, 0, 0, 6.3); ctx.fillStyle = INK; ctx.fill(); break;
+    }
+  };
+  eye(-g, f.eyes, 0); eye(g, f.eyes, 1);
+
+  const by = ey - 19;
+  if (f.brows === 1) { line([[-g - 10, by - 5], [-g + 9, by + 3]], sd + 20); line([[g + 10, by - 5], [g - 9, by + 3]], sd + 21); }
+  if (f.brows === 2) { line([[-g - 10, by + 3], [-g + 9, by - 5]], sd + 20); line([[g + 10, by + 3], [g - 9, by - 5]], sd + 21); }
+  if (f.brows === 3) { line([[-g - 9, by], [-g + 9, by]], sd + 20); line(arc(g, by - 2, 10, 7, 200, 340), sd + 21); }
+  if (f.brows === 4) { line([[-g - 10, by], [-g + 10, by]], sd + 20, 6); line([[g - 10, by], [g + 10, by]], sd + 21, 6); }
+
+  const ny = (ey + my) / 2;
+  switch (f.nose) {
+    case 1: draw([[-6, ny - 5], [8, ny - 5], [3, ny + 9]], { fill: INK, seed: sd + 30, lw: 2.5, amp: .6 }); break;
+    case 2: line([[1, ny - 12], [-2, ny + 5], [7, ny + 6]], sd + 30); break;
+    case 3: dot(-4, ny + 2, 2.2); dot(5, ny + 2, 2.2); break;
+    case 4: line([[-3, ey - 6], [-4, ny + 6], [5, ny + 8]], sd + 30); break;
+    case 5: draw(arc(1, ny + 1, 6.5, 6.5, 0, 330, 12), { seed: sd + 30, lw: 3.5, amp: .6 }); break;
+  }
+
+  switch (f.mouth) {
+    case 0: line(arc(0, my - 8, 20, 13, 25, 155), sd + 40); break;
+    case 1: line([[-15, my], [15, my]], sd + 40); break;
+    case 2:
+      draw([[-3, my], [-3, my + 9], [0, my + 14], [6, my + 15], [11, my + 10], [11, my]], { fill: TONGUE, seed: sd + 41, lw: 3.5, amp: .6 });
+      line([[-15, my], [17, my]], sd + 40); break;
+    case 3: ctx.beginPath(); ctx.ellipse(0, my + 2, 8, 10, 0, 0, 6.3); ctx.fillStyle = INK; ctx.fill(); break;
+    case 4: line(arc(0, my + 12, 18, 11, 205, 335), sd + 40); break;
+    case 5: line([[-18, my + 2], [-11, my - 3], [-4, my + 3], [3, my - 3], [10, my + 3], [17, my - 2]], sd + 40); break;
+    case 6:
+      draw(rr(0, my + 2, 40, 17, 6, 3), { fill: '#fff', seed: sd + 40, lw: 3.5, amp: .7 });
+      for (const x of [-10, 0, 10]) line([[x, my - 6], [x, my + 10]], sd + 42 + x, 2.5, .4); break;
+    case 7: line([[-8, my - 4], [0, my + 5], [8, my - 4]], sd + 40); break;
+    case 8:
+      draw([[-18, my - 4], [18, my - 4]].concat(arc(0, my - 4, 18, 18, 0, 180)), { fill: INK, seed: sd + 40, lw: 3, amp: .7 });
+      ctx.beginPath(); ctx.ellipse(2, my + 9, 8, 4.5, 0, 0, 6.3); ctx.fillStyle = TONGUE; ctx.fill(); break;
+    case 9: line([[-14, my + 2], [4, my + 3], [15, my - 6]], sd + 40); break;
+  }
+
+  switch (f.extra) {
+    case 1: for (const s of [-1, 1]) for (let i = 0; i < 3; i++) line([[s * (g + 14) - 6 + i * 5, ey + 21], [s * (g + 14) - 2 + i * 5, ey + 14]], sd + 50 + i, 2.2, .3); break;
+    case 2: draw([[-g, ey + 13], [-g - 5, ey + 24], [-g, ey + 29], [-g + 5, ey + 24]], { fill: '#bfe0f5', seed: sd + 50, lw: 2.5, amp: .4 }); break;
+    case 3: for (let i = 0; i < 6; i++) dot((i < 3 ? -1 : 1) * (g - 6 + (i % 3) * 7), ey + 17 + (i % 2) * 5, 1.5); break;
+    case 4: draw([[52, -52], [46, -40], [52, -34], [57, -41]], { fill: '#bfe0f5', seed: sd + 50, lw: 2.5, amp: .4 }); break;
+    case 5: for (let i = 0; i < 4; i++) line([[-30 + i * 19, -66], [-31 + i * 19, -66 + 9 + hash(sd + i) * 8]], sd + 50 + i, 2.5, .3); break;
+  }
+}
+
+// A clay tile with thickness `back` (a vector toward its far end), centred on 0,0.
+function drawSlab(f, back, blink, bulge = 1) {
+  const cap = rr(0, 0, HOLE.s * bulge, HOLE.s * bulge, HOLE.r * bulge);
+  if (back && Math.hypot(back[0], back[1]) > 1.5) {
+    const far = rr(back[0], back[1], HOLE.s, HOLE.s, HOLE.r);
+    draw(hull(cap.concat(far)), { fill: f.color, seed: f.seed + 70 });
+    ctx.save(); ctx.globalAlpha = .13; draw(hull(cap.concat(far)), { fill: '#000', stroke: false, seed: f.seed + 70 }); ctx.restore();
+    // ridges left by the window as the clay squeezes through
+    const n = Math.hypot(back[0], back[1]);
+    if (n > 14) for (const [x, y] of [[-30, -75], [14, -75], [52, -73], [-75, -34], [-75, 6], [-74, 44]]) {
+      line([[x + back[0] * .14, y + back[1] * .14], [x + back[0] * .86, y + back[1] * .86]], f.seed + x + y, 2.4, .7);
+    }
+  }
+  draw(cap, { fill: f.color, seed: f.seed + 71 });
+  drawFeatures(f, blink);
+}
+
+/* ---------- state ---------- */
+let face = newFace(), d = 0, v = 0, holding = false, reroll = false;
+let kick = 0, count = 0, blinkAt = 2, blinkFor = 0, t = 0;
+const bodies = [];
+
+function layout() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2.5);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  S = Math.max(.45, Math.min(W / 410, H / 800, 1.7));
+  HX = W / 2 - 4 * S; HY = Math.max(H * .37, 215 * S);
+  FLOOR = H - 16;
+}
+
+function drawHead() {
+  const strain = Math.max(0, d), sd = 500;
+  const shake = holding && !reduce ? Math.sin(t * 46) * 1.3 * strain : 0;
+  ctx.save();
+  ctx.translate(HX - PUSH[0] * kick * .16 + shake, HY - PUSH[1] * kick * .16);
+  ctx.scale(S, S);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+  // neck, with the dark shadow under the head
+  draw([[-70, 110], [28, 122], [34, 232], [-52, 246], [-96, 214], [-104, 92]], { fill: HEAD, seed: sd });
+  line([[-52, 246], [-56, 150]], sd + 1, 3);
+  draw([[-150, 76], [-100, 128], [20, 132], [40, 152], [-96, 150], [-168, 96]], { fill: INK, seed: sd + 2, lw: 3 });
+
+  // far ear, tucked behind the head
+  draw(rr(108, -34, 62, 104, 26), { fill: HEAD, seed: sd + 3 });
+
+  const front = rr(0, 0, FRONT.w, FRONT.h, FRONT.r);
+  draw(hull(front.concat(shift(front, BACK))), { fill: HEAD, seed: sd + 4 });
+  // near ear on the side of the head
+  draw(rr(-146, -38, 46, 96, 21), { fill: HEAD, seed: sd + 5 });
+  line(arc(-142, -36, 9, 26, 70, 290), sd + 6, 3);
+  draw(front, { fill: HEAD, seed: sd + 7 });
+  // pen ticks along the top edge, like the sketch
+  for (let i = 0; i < 5; i++) line([[-70 + i * 31, -124], [-71 + i * 31, -124 + 10 + hash(i + 3) * 12]], sd + 10 + i, 2.6, .4);
+  for (let i = 0; i < 3; i++) line([[-150 + i * 22, -150 + i * 4], [-151 + i * 22, -138 + i * 4 + hash(i) * 9]], sd + 16 + i, 2.6, .4);
+
+  // the head's own little mouth opens as it strains
+  const mh = 15 + strain * 20;
+  draw(rr(6, 99 + strain * 3, 50, mh, Math.min(7, mh / 2), 3), { fill: strain > .25 ? INK : '#fff', seed: sd + 20, lw: 3.5 });
+  if (strain > .25) draw(rr(-6, 99 + strain * 3 - mh / 2 + 5, 11, 9, 2, 2), { fill: '#fff', seed: sd + 21, lw: 2, amp: .3 });
+  else line([[-4, 93], [-4, 100]], sd + 21, 2.5, .3);
+
+  // the window
+  const hole = rr(HOLE.x, HOLE.y, HOLE.s, HOLE.s, HOLE.r);
+  draw(hole, { fill: INK, seed: sd + 22 });
+  const blink = blinkFor > 0;
+  if (d <= 0) {
+    ctx.save();
+    ctx.beginPath(); hole.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.clip();
+    ctx.translate(HOLE.x + PUSH[0] * d, HOLE.y + PUSH[1] * d);
+    drawSlab(face, null, blink);
+    ctx.restore();
+    draw(hole, { seed: sd + 22 });
+  } else {
+    ctx.save();
+    ctx.translate(HOLE.x + PUSH[0] * d, HOLE.y + PUSH[1] * d);
+    if (!reduce) ctx.rotate(Math.sin(t * 9) * .02 * strain);
+    drawSlab(face, [-PUSH[0] * d, -PUSH[1] * d], blink, 1 + .05 * Math.sin(Math.min(1, d) * Math.PI));
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawBody(b) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+  ctx.scale(1 + b.sq * .5, 1 - b.sq);
+  ctx.rotate(b.a);
+  const k = S * b.scale * Math.min(1, b.life * 6);
+  ctx.scale(k, k);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  drawSlab(b.face, [-PUSH[0] * b.th, -PUSH[1] * b.th], false);
+  ctx.restore();
+}
+
+function render() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.lineCap = 'round';
+  // the table edge
+  const pts = []; for (let x = -10; x <= W + 10; x += 40) pts.push([x, FLOOR + 2]);
+  line(pts, 900, 3, 1.4);
+  drawHead();
+  for (const b of bodies) drawBody(b);
+}
+
+/* ---------- sound ---------- */
+let ac = null, soundOn = true, squish = null;
+function audio() {
+  if (!soundOn) return null;
+  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  if (ac.state === 'suspended') ac.resume();
+  return ac;
+}
+function blip(f0, f1, dur, vol, type = 'sine') {
+  const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(), now = a.currentTime;
+  o.type = type; o.frequency.setValueAtTime(f0, now); o.frequency.exponentialRampToValueAtTime(f1, now + dur);
+  g.gain.setValueAtTime(vol, now); g.gain.exponentialRampToValueAtTime(.001, now + dur);
+  o.connect(g).connect(a.destination); o.start(now); o.stop(now + dur + .02);
+}
+function squishStart() {
+  const a = audio(); if (!a || squish) return;
+  const buf = a.createBuffer(1, a.sampleRate, a.sampleRate), ch = buf.getChannelData(0);
+  for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+  const src = a.createBufferSource(), flt = a.createBiquadFilter(), g = a.createGain();
+  src.buffer = buf; src.loop = true; flt.type = 'bandpass'; flt.Q.value = 5; g.gain.value = 0;
+  src.connect(flt).connect(g).connect(a.destination); src.start();
+  squish = { src, flt, g };
+}
+function squishStop() {
+  if (!squish) return;
+  const s = squish; squish = null;
+  try { s.g.gain.setTargetAtTime(0, ac.currentTime, .03); s.src.stop(ac.currentTime + .2); } catch (e) {}
+}
+
+/* ---------- simulation ---------- */
+function snap() {
+  const cx = HX + (HOLE.x + PUSH[0]) * S, cy = HY + (HOLE.y + PUSH[1]) * S;
+  bodies.push({ face, x: cx, y: cy, vx: rnd(120, 260) * S, vy: rnd(-260, -120) * S, a: 0, va: rnd(-4, 4), scale: 1, th: 1, sq: 0, life: 1, dying: false });
+  const max = Math.max(8, Math.min(46, Math.floor(W / (84 * S)) * 3));
+  let alive = bodies.filter(b => !b.dying);
+  while (alive.length > max) { alive[0].dying = true; alive = alive.slice(1); }
+  face = newFace(); d = -.3; v = 0; kick = 1; reroll = false;
+  count++; document.getElementById('n').textContent = count;
+  document.getElementById('hint').classList.add('gone');
+  blip(520, 110, .14, .3);
+  if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {}
+}
+
+function step(dt) {
+  t += dt;
+  if (holding) { v += (1.2 - v) * Math.min(1, dt * 9); d += v * dt; }
+  else {
+    v += (-240 * d - 13 * v) * dt; d += v * dt;
+    if (reroll && d < 0) { face = newFace(face.color); reroll = false; blip(300, 420, .07, .12, 'triangle'); }
+  }
+  if (d < -.34) { d = -.34; v = 0; }
+  if (d >= 1) snap();
+  kick += (0 - kick) * Math.min(1, dt * 9);
+  if (squish && ac) {
+    const now = ac.currentTime, p = Math.max(0, d);
+    squish.flt.frequency.setTargetAtTime(260 + p * 700, now, .03);
+    squish.g.gain.setTargetAtTime(holding ? .05 + p * .07 : 0, now, .03);
+  }
+  blinkAt -= dt; blinkFor -= dt;
+  if (blinkAt < 0) { blinkFor = .13; blinkAt = rnd(1.6, 4.5); }
+
+  const G = 2300 * S;
+  for (let i = bodies.length - 1; i >= 0; i--) {
+    const b = bodies[i];
+    b.scale += (.54 - b.scale) * Math.min(1, dt * 5);
+    b.th += (.26 - b.th) * Math.min(1, dt * 14);
+    b.sq += (0 - b.sq) * Math.min(1, dt * 10);
+    if (b.dying) { b.life -= dt * 3; if (b.life <= 0) { bodies.splice(i, 1); continue; } }
+    b.r = 68 * S * b.scale;
+    b.vy += G * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.a += b.va * dt;
+    if (b.y + b.r > FLOOR) {
+      if (b.vy > 420 * S) { b.sq = Math.min(.3, b.vy / (4200 * S)); blip(120, 55, .1, Math.min(.22, b.vy / (9000 * S))); }
+      b.y = FLOOR - b.r; b.vy *= -.28; b.vx *= .86; b.va += (b.vx / b.r - b.va) * .5;
+      if (Math.abs(b.vy) < 40 * S) b.vy = 0;
+    }
+    if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx) * .4; }
+    if (b.x + b.r > W) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * .4; }
+    b.vx *= 1 - dt * .4; b.va *= 1 - dt * 1.4;
+  }
+  for (let it = 0; it < 3; it++) for (let i = 0; i < bodies.length; i++) for (let j = i + 1; j < bodies.length; j++) {
+    const a = bodies[i], b = bodies[j];
+    if (a.scale > .7 || b.scale > .7) continue;      // still tumbling toward the pile
+    let dx = b.x - a.x, dy = b.y - a.y, dist = Math.hypot(dx, dy) || .01;
+    const over = a.r + b.r - dist;
+    if (over <= 0) continue;
+    dx /= dist; dy /= dist;
+    a.x -= dx * over / 2; a.y -= dy * over / 2; b.x += dx * over / 2; b.y += dy * over / 2;
+    const rv = (b.vx - a.vx) * dx + (b.vy - a.vy) * dy;
+    if (rv < 0) { const jmp = -rv * .6; a.vx -= dx * jmp; a.vy -= dy * jmp; b.vx += dx * jmp; b.vy += dy * jmp; }
+  }
+}
+
+/* ---------- input ---------- */
+function press(x, y) {
+  audio();
+  if (x != null) for (let i = bodies.length - 1; i >= 0; i--) {
+    const b = bodies[i];
+    if (b.scale < .7 && Math.hypot(x - b.x, y - b.y) < b.r) {   // flick a fallen face
+      b.vy = -rnd(700, 1000) * S; b.vx += rnd(-320, 320) * S; b.va += rnd(-7, 7); b.sq = .2;
+      blip(240, 480, .09, .14, 'triangle');
+      return;
+    }
+  }
+  holding = true; squishStart();
+}
+function release() {
+  if (!holding) return;
+  holding = false; squishStop();
+  if (d > .1) reroll = true;
+}
+cv.addEventListener('pointerdown', e => { e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (_) {} press(e.clientX, e.clientY); });
+cv.addEventListener('pointerup', release);
+cv.addEventListener('pointercancel', release);
+cv.addEventListener('contextmenu', e => e.preventDefault());
+window.addEventListener('blur', release);
+window.addEventListener('keydown', e => { if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat && e.target === document.body) { e.preventDefault(); press(); } });
+window.addEventListener('keyup', e => { if (e.code === 'Space' || e.code === 'Enter') release(); });
+const sb = document.getElementById('sound');
+sb.addEventListener('click', () => { soundOn = !soundOn; sb.textContent = soundOn ? 'Sound on' : 'Sound off'; if (!soundOn) squishStop(); sb.blur(); });
+window.addEventListener('resize', layout);
+
+/* ---------- loop ---------- */
+let last = performance.now(), boilT = 0;
+function frame(now) {
+  let dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (!reduce) { boilT += dt; if (boilT > .15) { boilT = 0; boil++; } }
+  const n = 2; for (let i = 0; i < n; i++) step(dt / n);
+  render();
+  requestAnimationFrame(frame);
+}
+layout();
+requestAnimationFrame(frame);
+window.__fd = { press, release };
+})();
+</script>
+<!--/page-->
+</body>
+</html>
