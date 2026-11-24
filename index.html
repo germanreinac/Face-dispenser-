@@ -6,108 +6,94 @@
 <!--page-->
 <title>Head Dispenser</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap">
 <style>
-/* Layout: the whole screen is one box drawn on a sketchbook page. Heads drop in and pile up; notes sit in the corners; a paper card slides up for a character. */
+/* Layout: an empty white studio. Clay heads drop in and pile on the bottom edge; small quiet labels in the corners; a white card rises for a character. */
 :root {
-  --paper: #e9e3d2;
-  --grid: #cfc8b4;
-  --ink: #171614;
-  --card: #f6f1e4;
-  --tongue: #ee8f86;
-  --hand: "Gochi Hand", "Marker Felt", "Chalkboard SE", "Comic Sans MS", cursive;
+  --bg: #ffffff;
+  --fg: #26221f;
+  --soft: #8d8680;
+  --line: #ebe7e2;
+  --shadow: rgba(60, 45, 30, .16);
+  --font: "Fredoka", "Nunito", "Avenir Next Rounded", "Trebuchet MS", system-ui, sans-serif;
   color-scheme: light;
 }
 html, body { height: 100%; }
 body {
-  margin: 0;
-  overflow: hidden;
-  background-color: var(--paper);
-  background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 26px 26px;
-  color: var(--ink);
-  font-family: var(--hand);
+  margin: 0; overflow: hidden;
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font);
   -webkit-user-select: none; user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
   touch-action: none;
 }
 #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-.note {
-  position: fixed; margin: 0;
-  text-transform: uppercase; letter-spacing: .06em; line-height: 1.05;
-  pointer-events: none;
-}
+.note { position: fixed; margin: 0; pointer-events: none; }
 #title {
-  top: calc(env(safe-area-inset-top, 0px) + 14px);
-  left: max(16px, env(safe-area-inset-left, 0px));
-  font-size: clamp(22px, 5vw, 34px); font-weight: 400;
-  transform: rotate(-3deg);
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: max(18px, env(safe-area-inset-left, 0px));
+  font-size: 17px; font-weight: 600; letter-spacing: .01em;
 }
 #count {
-  top: calc(env(safe-area-inset-top, 0px) + 18px);
-  right: max(16px, env(safe-area-inset-right, 0px));
-  font-size: clamp(15px, 3.4vw, 20px); text-align: right;
-  transform: rotate(2deg);
+  top: calc(env(safe-area-inset-top, 0px) + 40px);
+  left: max(18px, env(safe-area-inset-left, 0px));
+  font-size: 14px; color: var(--soft); font-variant-numeric: tabular-nums;
 }
-#count b { font-size: 1.9em; font-weight: 400; display: block; font-variant-numeric: tabular-nums; }
 #hint {
-  left: 0; right: 0; top: 34%;
-  text-align: center; font-size: clamp(16px, 4vw, 22px);
+  left: 0; right: 0; top: 30%;
+  text-align: center; font-size: 17px; font-weight: 500; color: var(--soft);
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   transition: opacity .6s;
 }
-#hint small { display: block; font-size: .72em; opacity: .7; margin-top: 4px; }
+#hint small { display: block; font-size: 14px; font-weight: 400; margin-top: 4px; }
 #hint.gone { opacity: 0; }
 .btn {
-  font: inherit; font-size: 14px; text-transform: uppercase; letter-spacing: .06em;
-  color: var(--ink); background: var(--card);
-  border: 2.5px solid var(--ink); border-radius: 12px 9px 13px 8px;
-  padding: 6px 11px; cursor: pointer;
+  font: inherit; font-size: 14px; font-weight: 500;
+  color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 14px; cursor: pointer;
+  box-shadow: 0 3px 10px var(--shadow);
 }
-.btn:focus-visible { outline: 3px dashed var(--ink); outline-offset: 3px; }
-.btn:active { transform: translateY(2px); }
+.btn:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+.btn:active { transform: translateY(1px); box-shadow: 0 1px 4px var(--shadow); }
 #tools {
   position: fixed; display: flex; gap: 8px;
-  top: calc(env(safe-area-inset-top, 0px) + 84px);
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
   right: max(16px, env(safe-area-inset-right, 0px));
 }
 #card {
   position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
-  width: min(430px, calc(100% - 32px)); box-sizing: border-box;
-  transform: translateX(-50%) rotate(-1deg);
-  background: var(--card); border: 3px solid var(--ink);
-  border-radius: 22px 16px 24px 14px;
-  box-shadow: 6px 7px 0 var(--ink);
-  padding: 14px 16px 16px;
-  animation: up .28s cubic-bezier(.2, 1.4, .4, 1);
+  width: min(420px, calc(100% - 32px)); box-sizing: border-box;
+  transform: translateX(-50%);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 26px;
+  box-shadow: 0 14px 40px var(--shadow);
+  padding: 18px 20px 18px;
+  animation: up .3s cubic-bezier(.2, 1.3, .4, 1);
 }
-@keyframes up { from { transform: translate(-50%, 60%) rotate(4deg); opacity: 0; } }
+@keyframes up { from { transform: translate(-50%, 50%); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #card { animation: none; } }
 #card header { display: flex; gap: 12px; align-items: center; }
-#portrait { width: 104px; height: 104px; flex: none; }
-#card h2 { margin: 0; font-size: 27px; font-weight: 400; line-height: 1; text-wrap: balance; }
-#card .job { margin: 5px 0 0; font-size: 16px; line-height: 1.15; opacity: .8; }
-#card dl { margin: 10px 0 12px; display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; font-size: 16px; line-height: 1.2; }
-#card dt { text-transform: uppercase; letter-spacing: .06em; font-size: 12px; padding-top: 3px; opacity: .65; }
+#chip { width: 34px; height: 34px; border-radius: 11px; flex: none; box-shadow: inset -3px -4px 6px rgba(0,0,0,.14), inset 3px 3px 5px rgba(255,255,255,.4); }
+#card h2 { margin: 0; font-size: 23px; font-weight: 600; line-height: 1.05; text-wrap: balance; }
+#card .job { margin: 3px 0 0; font-size: 15px; line-height: 1.2; color: var(--soft); }
+#card dl { margin: 14px 0 16px; display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; font-size: 15px; line-height: 1.25; }
+#card dt { color: var(--soft); }
 #card dd { margin: 0; min-width: 0; }
 #card .row { display: flex; gap: 8px; flex-wrap: wrap; }
 </style>
 
-<canvas id="c" aria-label="A box of blocky character heads. Tap to drop a head, drag heads around, tap a head to read about it."></canvas>
-<h1 id="title" class="note">Head<br>dispenser</h1>
-<p id="count" class="note"><b id="n">0</b>heads</p>
-<p id="hint" class="note">Tap to drop a head<small>drag them around · tap one to meet it</small></p>
+<canvas id="c" aria-label="A white room of clay character heads. Tap to drop a head, drag heads around, tap a head to read about it."></canvas>
+<h1 id="title" class="note">Head dispenser</h1>
+<p id="count" class="note"><span id="n">0</span> heads</p>
+<p id="hint" class="note">Tap to drop a head<small>Drag them around. Tap one to meet it.</small></p>
 <div id="tools">
   <button id="tip" class="btn" type="button">Tip out</button>
   <button id="sound" class="btn" type="button">Sound on</button>
 </div>
 <section id="card" hidden aria-live="polite">
   <header>
-    <canvas id="portrait" width="208" height="208"></canvas>
+    <span id="chip"></span>
     <div>
       <h2 id="cname"></h2>
       <p class="job" id="cjob"></p>
@@ -126,254 +112,230 @@ body {
 </section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (() => {
 const { Engine, Bodies, Body, Composite, Constraint, Query, Events } = Matter;
 const cv = document.getElementById('c');
-const mainCtx = cv.getContext('2d');
-const pv = document.getElementById('portrait'), pctx = pv.getContext('2d');
-let ctx = mainCtx;
-const css = getComputedStyle(document.documentElement);
-const INK = css.getPropertyValue('--ink').trim() || '#171614';
-const TONGUE = css.getPropertyValue('--tongue').trim() || '#ee8f86';
-const CLAY = ['#f3b9a2', '#f5d36a', '#a3d3c2', '#aac6f1', '#f29f7d', '#cbb3ea', '#bfe093', '#f4a9c4', '#efe8d6'];
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = id => document.getElementById(id);
-
-let W = 0, H = 0, DPR = 1, SIDE = 80, boil = 0, t = 0;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-function hash(n) { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
 
-/* ---------- hand-drawn line kit ---------- */
-function rr(cx, cy, w, h, r, n = 5) {
-  const hw = w / 2, hh = h / 2, pts = [];
-  r = Math.min(r, hw, hh);
-  const cs = [[cx + hw - r, cy - hh + r, -90], [cx + hw - r, cy + hh - r, 0], [cx - hw + r, cy + hh - r, 90], [cx - hw + r, cy - hh + r, 180]];
-  for (const [x, y, a0] of cs) for (let i = 0; i <= n; i++) {
-    const a = (a0 + 90 * i / n) * Math.PI / 180;
-    pts.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+const CLAY = ['#e2957a', '#eebb3e', '#72bfa3', '#7da6e6', '#ea7a4c', '#a88ad9', '#93cb5f', '#ea82ab', '#eadfc6', '#d6614c', '#62b5cf'];
+let W = 0, H = 0, SIDE = 100, t = 0;
+
+/* ---------- three.js scene: world x = screen x, world y = -screen y, z toward the viewer ---------- */
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: false });
+renderer.setClearColor(0xffffff, 1);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+const FOV = 24;
+const camera = new THREE.PerspectiveCamera(FOV, 1, 10, 10000);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xa89888, .5));
+const key = new THREE.DirectionalLight(0xfff1e0, .5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.bias = -0.0004; key.shadow.normalBias = 1.2;
+scene.add(key, key.target);
+const fill = new THREE.DirectionalLight(0xe6eeff, .08);
+scene.add(fill, fill.target);
+const shadowMat = new THREE.ShadowMaterial({ opacity: .08 });
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), shadowMat);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), shadowMat);
+wall.receiveShadow = ground.receiveShadow = true;
+ground.rotation.x = -Math.PI / 2;
+scene.add(wall, ground);
+
+// Thumbed-clay surface: soft dents, tool scratches and a few fingerprints, used as a bump map.
+const BUMP = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const g = c.getContext('2d');
+  g.fillStyle = '#808080'; g.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 260; i++) {
+    const x = rnd(0, 512), y = rnd(0, 512), r = rnd(10, 60), v = Math.random() < .5 ? 255 : 0;
+    const gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, `rgba(${v},${v},${v},${rnd(.04, .13)})`); gr.addColorStop(1, `rgba(${v},${v},${v},0)`);
+    g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
   }
-  return pts;
-}
-function hull(points) {
-  const p = points.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
-  const lo = [], up = [];
-  for (const q of p) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
-  for (let i = p.length - 1; i >= 0; i--) { const q = p[i]; while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
-  lo.pop(); up.pop();
-  return lo.concat(up);
-}
-function arc(cx, cy, rx, ry, a0, a1, n = 9) {
-  const pts = [];
-  for (let i = 0; i <= n; i++) { const a = (a0 + (a1 - a0) * i / n) * Math.PI / 180; pts.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]); }
-  return pts;
-}
-// Resample a path and push it around with two slow waves that change a few times a second.
-function wobble(pts, closed, seed, amp) {
-  const src = closed ? pts.concat([pts[0]]) : pts, out = [];
-  let total = 0;
-  for (let i = 0; i < src.length - 1; i++) {
-    const [ax, ay] = src[i], [bx, by] = src[i + 1];
-    const len = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(len / 12));
-    for (let j = 0; j < n; j++) out.push([ax + (bx - ax) * j / n, ay + (by - ay) * j / n, total + len * j / n]);
-    total += len;
+  g.lineCap = 'round';
+  for (let i = 0; i < 16; i++) {           // fingerprints
+    const x = rnd(40, 470), y = rnd(40, 470), a = rnd(0, 3.14), rx = rnd(22, 40);
+    g.strokeStyle = 'rgba(40,40,40,.16)'; g.lineWidth = 1.6;
+    for (let k = 3; k < rx; k += 4) { g.beginPath(); g.ellipse(x, y, k, k * 1.35, a, rnd(0, .6), rnd(5, 6.2)); g.stroke(); }
   }
-  if (!closed) out.push([src[src.length - 1][0], src[src.length - 1][1], total]);
-  const k = seed * 7.3 + boil * 13.7;
-  const p1 = hash(k) * 6.28, p2 = hash(k + 1) * 6.28, p3 = hash(k + 2) * 6.28, p4 = hash(k + 3) * 6.28;
-  const f1 = 6.283 * Math.max(1, Math.round(total / 150)) / (total || 1);
-  const f2 = 6.283 * Math.max(2, Math.round(total / 55)) / (total || 1);
-  return out.map(([x, y, l]) => [
-    x + amp * (Math.sin(l * f1 + p1) * 0.65 + Math.sin(l * f2 + p2) * 0.35),
-    y + amp * (Math.sin(l * f1 + p3) * 0.65 + Math.sin(l * f2 + p4) * 0.35)]);
-}
-// MT maps a face of the head (its own flat x,y) onto the screen: [ux, uy, vx, vy, cx, cy]. Lines keep their pen width however the face is turned.
-let MT = null;
-function draw(pts, o = {}) {
-  const closed = o.closed !== false;
-  const w = wobble(pts, closed, o.seed || 1, o.amp == null ? 1.5 : o.amp);
-  ctx.beginPath();
-  for (let i = 0; i < w.length; i++) {
-    let x = w[i][0], y = w[i][1];
-    if (MT) { const X = MT[0] * x + MT[2] * y + MT[4]; y = MT[1] * x + MT[3] * y + MT[5]; x = X; }
-    if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+  for (let i = 0; i < 70; i++) {           // scratches
+    const x = rnd(0, 512), y = rnd(0, 512), a = rnd(0, 6.28), l = rnd(8, 40);
+    g.strokeStyle = `rgba(${Math.random() < .5 ? 0 : 255},${0},${0},0)`;
+    g.strokeStyle = Math.random() < .6 ? 'rgba(30,30,30,.18)' : 'rgba(230,230,230,.16)';
+    g.lineWidth = rnd(.8, 2.2); g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke();
   }
-  if (closed) ctx.closePath();
-  if (o.fill) { ctx.fillStyle = o.fill; ctx.fill(); }
-  if (o.stroke !== false) { ctx.strokeStyle = o.stroke || INK; ctx.lineWidth = o.lw || 4.5; ctx.stroke(); }
-}
-const line = (pts, seed, lw = 4.5, amp = 1) => draw(pts, { closed: false, seed, lw, amp });
-function blob(x, y, rx, ry = rx, fill = INK) {
-  ctx.save();
-  if (MT) ctx.transform(MT[0], MT[1], MT[2], MT[3], MT[4], MT[5]);
-  ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, 6.3); ctx.fillStyle = fill; ctx.fill();
-  ctx.restore();
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+})();
+const clay = (color, rough = .82, bump = 2.6) => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0, bumpMap: BUMP, bumpScale: bump });
+const M_EYE = clay('#fbfaf6', .45, .4), M_PUPIL = clay('#161314', .35, .2), M_DARK = clay('#3a2422', .9, .5);
+const M_TOOTH = clay('#f7f3e8', .5, .4), M_TONGUE = clay('#e8767a', .6, .5), M_BROW = clay('#4b372e', .85, .8);
+const SPH = new THREE.SphereGeometry(1, 28, 18);
+
+// A box with rounded corners, kneaded slightly out of true so no two heads are quite alike.
+function lumpyBox(w, h, d, r) {
+  const geo = new THREE.BoxGeometry(w, h, d, 14, 14, 12);
+  const pos = geo.attributes.position, nor = geo.attributes.normal;
+  const hx = w / 2 - r, hy = h / 2 - r, hz = d / 2 - r;
+  const waves = [0, 1, 2].map(() => {
+    const dir = new THREE.Vector3(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)).normalize().multiplyScalar(6.283 / (w * rnd(.7, 1.3)));
+    return { dir, ph: rnd(0, 6.28) };
+  });
+  const A = w * .012, p = new THREE.Vector3(), n = new THREE.Vector3(), q = new THREE.Vector3(), gr = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    p.fromBufferAttribute(pos, i);
+    q.set(Math.max(-hx, Math.min(hx, p.x)), Math.max(-hy, Math.min(hy, p.y)), Math.max(-hz, Math.min(hz, p.z)));
+    n.copy(p).sub(q).normalize();
+    p.copy(q).addScaledVector(n, r);
+    let f = 0; gr.set(0, 0, 0);
+    for (const wv of waves) { const a = p.dot(wv.dir) + wv.ph; f += Math.sin(a); gr.addScaledVector(wv.dir, Math.cos(a)); }
+    p.addScaledVector(n, f * A);
+    gr.multiplyScalar(A); gr.addScaledVector(n, -gr.dot(n));
+    n.sub(gr).normalize();
+    pos.setXYZ(i, p.x, p.y, p.z); nor.setXYZ(i, n.x, n.y, n.z);
+  }
+  return geo;
 }
 
 /* ---------- characters ---------- */
 const FIRST = ['Bobo', 'Mirta', 'Tofu', 'Gus', 'Pepa', 'Nilo', 'Olga', 'Rufo', 'Chela', 'Tito', 'Lupe', 'Momo', 'Queso', 'Bruno', 'Nuria', 'Paco', 'Dot', 'Kiki', 'Otto', 'Greta', 'Lalo', 'Pipa'];
 const LAST = ['Blockhead', 'McCube', 'de la Plastilina', 'Squarez', 'Cornerstone', 'Lumpkin', 'Brickowski', 'von Wobble', 'Cubillo', 'Fallini', 'Boxworth', 'Terrón'];
 const JOBS = ['Professional faller', 'Part-time paperweight', 'Retired dice (never rolled a six)', 'Elevator critic', 'Chair tester, junior grade', 'Weather forecaster who only says "falling"', 'Doorstop with ambitions', 'Mayor of the bottom row', 'Freelance corner', 'Amateur bouncer (the bouncing kind)', 'Sugar cube impersonator', 'Night guard of this exact spot'];
-const LIKES = ['landing on its good side', 'being picked first', 'soft floors', 'the number four', 'long naps at the bottom of the pile', 'staring contests', 'warm pockets', 'being stacked neatly', 'grid paper', 'a firm handshake it cannot give', 'toast, in theory', 'slow elevators'];
-const FEARS = ['spheres', 'the edge of the screen', 'being a ball in a past life', 'tall piles', 'erasers', 'the button that says Tip out', 'round tables', 'stairs', 'someone drawing a moustache on it', 'Tuesdays', 'wet ink', 'being upside down at a party'];
+const LIKES = ['landing on its good side', 'being picked first', 'soft floors', 'the number four', 'long naps at the bottom of the pile', 'staring contests', 'warm pockets', 'being stacked neatly', 'a clean white room', 'a firm handshake it cannot give', 'toast, in theory', 'slow elevators'];
+const FEARS = ['spheres', 'the edge of the screen', 'being a ball in a past life', 'tall piles', 'warm hands', 'the button that says Tip out', 'round tables', 'stairs', 'thumbprints', 'Tuesdays', 'radiators', 'being upside down at a party'];
 const PLANS = ['to end up on top of the pile, no matter who is under it', 'to be thrown gently, just once', 'to find out what is behind the screen', 'to grow a neck', 'to roll, like the round ones do', 'to keep your finger', 'to be the last head standing', 'to start a band with the three heads next to it', 'to look casual until you leave', 'to borrow someone else\'s ears', 'to learn what a Tuesday is', 'none. Suspiciously none'];
-const N_EYES = 9, N_BROWS = 5, N_NOSE = 6, N_MOUTH = 10, N_EXTRA = 6;
 
-function rollFace(f) {
-  f.eyes = Math.floor(rnd(0, N_EYES));
-  f.brows = Math.random() < 0.45 ? 0 : Math.floor(rnd(1, N_BROWS));
-  f.mouth = Math.floor(rnd(0, N_MOUTH));
-  return f;
+function part(parent, geo, mat, sx, sy, sz, x, y, z) {
+  const m = new THREE.Mesh(geo, mat);
+  m.scale.set(sx, sy, sz); m.position.set(x, y, z);
+  m.castShadow = true; m.receiveShadow = true;
+  parent.add(m); return m;
 }
-function newChar() {
-  return rollFace({
-    color: pick(CLAY),
-    nose: Math.floor(rnd(0, N_NOSE)),
-    extra: Math.random() < 0.55 ? 0 : Math.floor(rnd(1, N_EXTRA)),
-    gap: rnd(22, 32), ey: rnd(-20, -8), my: rnd(30, 40), look: [rnd(-2.5, 2.5), rnd(-2, 2)],
-    seed: Math.floor(rnd(1, 9999)),
-    fw: rnd(140, 160), fh: rnd(134, 162), fd: rnd(104, 140), r: rnd(24, 42),
-    ears: Math.random() < 0.6, hair: Math.floor(rnd(0, 4)),
-    name: pick(FIRST) + ' ' + pick(LAST), job: pick(JOBS), likes: pick(LIKES), fear: pick(FEARS), plan: pick(PLANS),
-  });
+// Mouth curve: a rolled clay sausage bent into an arc. up=true is a smile.
+function arcMouth(parent, R, tube, span, up, mat) {
+  const geo = new THREE.TorusGeometry(R, tube, 10, 22, span);
+  const m = new THREE.Mesh(geo, mat);
+  m.rotation.z = (up ? -1 : 1) * Math.PI / 2 - span / 2;
+  m.castShadow = true; parent.add(m); m.userData.own = geo;
+  return m;
 }
 
-// Features for the front of a head, on a flat tile centred on 0,0 (about 150 units wide).
-function drawFeatures(f, blink, mood) {
-  const sd = f.seed, g = f.gap, ey = f.ey, my = f.my;
-  let eyes = f.eyes, mouth = f.mouth, brows = f.brows;
-  if (mood === 'ouch') { eyes = 4; mouth = 5; brows = 0; }
-  if (mood === 'wow') { eyes = 5; mouth = 3; brows = 3; }
-  const eye = (x, kind, i) => {
-    if (blink && [0, 1, 5, 8].includes(kind)) return line([[x - 7, ey], [x + 7, ey]], sd + i);
-    switch (kind) {
-      case 0: blob(x, ey, 5.5); break;
-      case 1: draw(arc(x, ey, 10, 10, 0, 330, 12), { fill: '#fff', seed: sd + i, lw: 4, amp: .8 }); blob(x + f.look[0], ey + f.look[1], 3.6); break;
-      case 2: line(arc(x, ey + 3, 8, 8, 200, 340), sd + i); break;
-      case 3: line([[x - 8, ey], [x + 8, ey]], sd + i); break;
-      case 4: { const d = i ? -1 : 1; line([[x - 7 * d, ey - 7], [x + 6 * d, ey], [x - 7 * d, ey + 7]], sd + i); break; }
-      case 5: { const r = i ? 7 : 12; draw(arc(x, ey, r, r, 0, 330, 12), { fill: '#fff', seed: sd + i, lw: 4, amp: .8 }); blob(x + f.look[0], ey + f.look[1], r * .36); break; }
-      case 6: if (i) line(arc(x, ey + 3, 8, 8, 200, 340), sd + i); else blob(x, ey, 5.5); break;
-      case 7: line([[x - 6, ey - 6], [x + 6, ey + 6]], sd + i); line([[x + 6, ey - 6], [x - 6, ey + 6]], sd + i + 9); break;
-      case 8: blob(x, ey, 4.5, 9); break;
-    }
-  };
-  eye(-g, eyes, 0); eye(g, eyes, 1);
+// Builds the face for a head. Everything is a separate lump of clay stuck on the front.
+function buildFace(hd) {
+  if (hd.face) { hd.face.traverse(o => o.userData.own && o.userData.own.dispose()); hd.inner.remove(hd.face); }
+  const { w, h, d } = hd, zf = d / 2, face = new THREE.Group();
+  hd.face = face; hd.inner.add(face);
+  const tint = new THREE.Color(hd.color);
 
-  const by = ey - 19;
-  if (brows === 1) { line([[-g - 10, by - 5], [-g + 9, by + 3]], sd + 20); line([[g + 10, by - 5], [g - 9, by + 3]], sd + 21); }
-  if (brows === 2) { line([[-g - 10, by + 3], [-g + 9, by - 5]], sd + 20); line([[g + 10, by + 3], [g - 9, by - 5]], sd + 21); }
-  if (brows === 3) { line([[-g - 9, by - 3], [-g + 9, by - 3]], sd + 20); line(arc(g, by - 4, 10, 7, 200, 340), sd + 21); }
-  if (brows === 4) { line([[-g - 10, by], [-g + 10, by]], sd + 20, 6.5); line([[g - 10, by], [g + 10, by]], sd + 21, 6.5); }
-
-  const ny = (ey + my) / 2;
-  switch (f.nose) {
-    case 1: draw([[-6, ny - 5], [8, ny - 5], [3, ny + 9]], { fill: INK, seed: sd + 30, lw: 2.5, amp: .6 }); break;
-    case 2: line([[1, ny - 12], [-2, ny + 5], [7, ny + 6]], sd + 30); break;
-    case 3: blob(-4, ny + 2, 2.4); blob(5, ny + 2, 2.4); break;
-    case 4: line([[-3, ey - 6], [-4, ny + 6], [5, ny + 8]], sd + 30); break;
-    case 5: draw(arc(1, ny + 1, 6.5, 6.5, 0, 330, 10), { seed: sd + 30, lw: 4, amp: .6 }); break;
+  // eyes: close-set white balls with small pupils
+  const re = w * rnd(.105, .155), gap = re * rnd(.98, 1.35), ey = h * rnd(.06, .16), odd = Math.random() < .25 ? rnd(.7, .85) : 1;
+  hd.eyes = [];
+  for (const s of [-1, 1]) {
+    const g = new THREE.Group(), r = re * (s > 0 ? odd : 1);
+    g.position.set(s * gap, ey, zf - r * .25);
+    part(g, SPH, M_EYE, r, r, r, 0, 0, 0);
+    const lx = rnd(-.25, .25), ly = rnd(-.2, .2);
+    part(g, SPH, M_PUPIL, r * .24, r * .24, r * .14, lx * r, ly * r, r * Math.sqrt(1 - lx * lx - ly * ly) * .97);
+    const lid = part(g, SPH, hd.mat, r * 1.06, r * 1.06, r * 1.06, 0, 0, 0); lid.visible = false;
+    g.userData.lid = lid; face.add(g); hd.eyes.push(g);
   }
-
-  switch (mouth) {
-    case 0: line(arc(0, my - 8, 20, 13, 25, 155), sd + 40); break;
-    case 1: line([[-15, my], [15, my]], sd + 40); break;
-    case 2:
-      draw([[-3, my], [-3, my + 9], [0, my + 14], [6, my + 15], [11, my + 10], [11, my]], { fill: TONGUE, seed: sd + 41, lw: 3.5, amp: .6 });
-      line([[-15, my], [17, my]], sd + 40); break;
-    case 3: blob(0, my + 2, 8, 10); break;
-    case 4: line(arc(0, my + 12, 18, 11, 205, 335), sd + 40); break;
-    case 5: line([[-18, my + 2], [-11, my - 3], [-4, my + 3], [3, my - 3], [10, my + 3], [17, my - 2]], sd + 40); break;
-    case 6:
-      draw(rr(0, my + 2, 40, 17, 6, 3), { fill: '#fff', seed: sd + 40, lw: 3.5, amp: .7 });
-      for (const x of [-10, 0, 10]) line([[x, my - 6], [x, my + 10]], sd + 42 + x, 2.5, .4); break;
-    case 7: line([[-8, my - 4], [0, my + 5], [8, my - 4]], sd + 40); break;
-    case 8:
-      draw([[-18, my - 4], [18, my - 4]].concat(arc(0, my - 4, 18, 18, 0, 180)), { fill: INK, seed: sd + 40, lw: 3, amp: .7 });
-      blob(2, my + 9, 8, 4.5, TONGUE); break;
-    case 9: line([[-14, my + 2], [4, my + 3], [15, my - 6]], sd + 40); break;
+  // brows
+  const bt = Math.floor(rnd(0, 5));
+  if (bt) for (const s of [-1, 1]) {
+    const b = part(face, SPH, bt === 4 ? hd.matDark : M_BROW, re * .95, re * .2, re * .24, s * gap, ey + re * 1.28, zf + re * .35);
+    b.rotation.z = s * [0, -.38, .38, .0, .12][bt]; if (bt === 3 && s > 0) b.position.y += re * .35;
   }
-
-  switch (f.extra) {
-    case 1: for (const s of [-1, 1]) for (let i = 0; i < 3; i++) line([[s * (g + 14) - 6 + i * 5, ey + 21], [s * (g + 14) - 2 + i * 5, ey + 14]], sd + 50 + i, 2.4, .3); break;
-    case 2: draw([[-g, ey + 13], [-g - 5, ey + 24], [-g, ey + 29], [-g + 5, ey + 24]], { fill: '#bfe0f5', seed: sd + 50, lw: 2.5, amp: .4 }); break;
-    case 3: for (let i = 0; i < 6; i++) blob((i < 3 ? -1 : 1) * (g - 6 + (i % 3) * 7), ey + 17 + (i % 2) * 5, 1.7); break;
-    case 4: draw([[50, -50], [44, -38], [50, -32], [55, -39]], { fill: '#bfe0f5', seed: sd + 50, lw: 2.5, amp: .4 }); break;
-    case 5: line([[-g - 12, ey + 18], [-g - 2, ey + 22]], sd + 50, 2.4, .3); line([[g + 12, ey + 18], [g + 2, ey + 22]], sd + 51, 2.4, .3); break;
-  }
+  // nose
+  const nt = Math.floor(rnd(0, 5)), ny = ey - re * 1.1 - h * .03;
+  if (nt === 0) part(face, SPH, hd.matNose, w * .085, w * .085, w * .085, 0, ny, zf + w * .03);
+  if (nt === 1) part(face, SPH, hd.matNose, w * .065, w * .1, w * .13, 0, ny, zf + w * .04);
+  if (nt === 2) part(face, SPH, hd.matNose, w * .12, w * .07, w * .08, 0, ny, zf + w * .02);
+  if (nt === 3) part(face, SPH, hd.matNose, w * .05, w * .05, w * .05, 0, ny, zf + w * .02);
+  // mouths: the everyday one, plus an "oh!" and a grimace to swap in
+  const my = Math.min(ny - w * .14, -h * .2), mz = zf + w * .004;
+  const base = new THREE.Group(), oh = new THREE.Group(), grim = new THREE.Group();
+  for (const g of [base, oh, grim]) { g.position.set(0, my, mz); face.add(g); }
+  const mt = Math.floor(rnd(0, 7)), mw = w * rnd(.14, .2);
+  if (mt === 0) arcMouth(base, mw, w * .02, 2.3, true, M_DARK).position.y = mw * .55;
+  if (mt === 1) arcMouth(base, mw, w * .02, 1.7, false, M_DARK).position.y = -mw * .9;
+  if (mt === 2) part(base, SPH, M_DARK, mw, w * .02, w * .022, 0, 0, 0);
+  if (mt === 3) { part(base, SPH, M_DARK, mw, w * .085, w * .03, 0, 0, 0); part(base, SPH, M_TOOTH, mw * .72, w * .03, w * .03, 0, w * .045, w * .008); part(base, SPH, M_TONGUE, mw * .5, w * .035, w * .03, 0, -w * .04, w * .008); }
+  if (mt === 4) { part(base, SPH, M_DARK, mw * 1.08, w * .07, w * .028, 0, 0, 0); part(base, SPH, M_TOOTH, mw * .95, w * .05, w * .034, 0, 0, w * .004); part(base, SPH, M_DARK, mw * .95, w * .006, w * .037, 0, 0, w * .006); }
+  if (mt === 5) { part(base, SPH, M_DARK, mw, w * .02, w * .022, 0, 0, 0); part(base, SPH, M_TONGUE, w * .05, w * .065, w * .03, mw * .3, -w * .05, w * .012); }
+  if (mt === 6) { const m = arcMouth(base, mw, w * .02, 1.5, true, M_DARK); m.position.set(mw * .25, mw * .7, 0); m.rotation.z += .35; }
+  part(oh, SPH, M_DARK, w * .07, w * .095, w * .03, 0, 0, 0);
+  part(grim, SPH, M_DARK, w * .2, w * .075, w * .028, 0, 0, 0); part(grim, SPH, M_TOOTH, w * .18, w * .055, w * .034, 0, 0, w * .004);
+  for (const x of [-.09, 0, .09]) part(grim, SPH, M_DARK, w * .006, w * .055, w * .037, x * w, 0, w * .006);
+  part(grim, SPH, M_DARK, w * .18, w * .006, w * .037, 0, 0, w * .006);
+  hd.mouths = { base, oh, grim };
+  // freckles or cheeks, sometimes
+  const ex = Math.random();
+  if (ex < .2) for (const s of [-1, 1]) part(face, SPH, M_TONGUE, w * .06, w * .045, w * .012, s * (gap + re * 1.5), ey - re * 1.25, zf);
+  else if (ex < .35) for (let i = 0; i < 6; i++) part(face, SPH, M_BROW, w * .012, w * .012, w * .006, (i < 3 ? -1 : 1) * (gap + re * .6 + (i % 3) * w * .04), ey - re * 1.2 - (i % 2) * w * .03, zf + w * .004);
+  void tint;
 }
 
-/* ---------- 3D heads ----------
-   Each head is a rounded box. x is right, y is down, z points out of the screen; the view is flat-on (no perspective). */
-const FACES = [
-  { id: 'front', n: [0, 0, 1], u: [1, 0, 0], v: [0, 1, 0] },
-  { id: 'back', n: [0, 0, -1], u: [-1, 0, 0], v: [0, 1, 0] },
-  { id: 'right', n: [1, 0, 0], u: [0, 0, -1], v: [0, 1, 0] },
-  { id: 'left', n: [-1, 0, 0], u: [0, 0, 1], v: [0, 1, 0] },
-  { id: 'top', n: [0, -1, 0], u: [1, 0, 0], v: [0, 0, 1] },
-  { id: 'bottom', n: [0, 1, 0], u: [1, 0, 0], v: [0, 0, -1] },
-];
-function rot(roll, pitch, yaw) {
-  const cz = Math.cos(roll), sz = Math.sin(roll), cx = Math.cos(pitch), sx = Math.sin(pitch), cy = Math.cos(yaw), sy = Math.sin(yaw);
-  // Rz * Rx * Ry
-  return [
-    cz * cy - sz * sx * sy, -sz * cx, cz * sy + sz * sx * cy,
-    sz * cy + cz * sx * sy, cz * cx, sz * sy - cz * sx * cy,
-    -cx * sy, sx, cx * cy];
+function makeHead(color, w, h, d, r) {
+  const root = new THREE.Group(), inner = new THREE.Group();
+  root.add(inner); root.rotation.order = 'ZXY';
+  const c = new THREE.Color(color), hsl = {}; c.getHSL(hsl);
+  const mat = clay(color);
+  const matDark = clay(new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l * .72));
+  const matNose = clay(new THREE.Color().setHSL((hsl.h + .97) % 1, Math.min(1, hsl.s * 1.05), hsl.l * .93));
+  const geo = lumpyBox(w, h, d, r);
+  const box = new THREE.Mesh(geo, mat); box.castShadow = box.receiveShadow = true; inner.add(box);
+  const hd = { root, inner, w, h, d, color, mat, matDark, matNose, geo };
+  if (Math.random() < .65) for (const s of [-1, 1]) {        // ears
+    part(inner, SPH, mat, w * .055, h * .13, d * .17, s * (w / 2 + w * .012), h * .03, 0);
+    part(inner, SPH, matDark, w * .03, h * .07, d * .09, s * (w / 2 + w * .045), h * .03, 0);
+  }
+  const hair = Math.floor(rnd(0, 4));                          // hair: a few rolled sausages, or a tuft
+  if (hair === 1) for (let i = 0; i < 3; i++) part(inner, SPH, matDark, w * .03, w * .03, d * rnd(.2, .34), (i - 1) * w * .14 + rnd(-4, 4), h / 2 + w * .006, rnd(-.08, .08) * d).rotation.y = rnd(-.3, .3);
+  if (hair === 2) part(inner, SPH, matDark, w * .1, w * .07, w * .1, rnd(-.15, .15) * w, h / 2 + w * .02, rnd(-.1, .15) * d);
+  if (hair === 3) for (let i = 0; i < 5; i++) part(inner, SPH, matDark, w * .045, w * .04, w * .045, (i - 2) * w * .1, h / 2 + w * .012, d * .22 + (i % 2) * w * .05);
+  buildFace(hd);
+  return hd;
 }
-const mul = (R, a) => [R[0] * a[0] + R[1] * a[1] + R[2] * a[2], R[3] * a[0] + R[4] * a[1] + R[5] * a[2], R[6] * a[0] + R[7] * a[1] + R[8] * a[2]];
-
-function drawHead(f, R, blink, mood) {
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  const dims = { front: [f.fw, f.fh, f.fd], back: [f.fw, f.fh, f.fd], right: [f.fd, f.fh, f.fw], left: [f.fd, f.fh, f.fw], top: [f.fw, f.fd, f.fh], bottom: [f.fw, f.fd, f.fh] };
-  const list = [], all = [];
-  for (const F of FACES) {
-    const [w, h, deep] = dims[F.id];
-    const n = mul(R, F.n), u = mul(R, F.u), v = mul(R, F.v);
-    const m = [u[0], u[1], v[0], v[1], n[0] * deep / 2, n[1] * deep / 2];
-    const shape = rr(0, 0, w, h, f.r);
-    for (const p of shape) all.push([m[0] * p[0] + m[2] * p[1] + m[4], m[1] * p[0] + m[3] * p[1] + m[5]]);
-    if (n[2] > 0.03) list.push({ F, m, shape, nz: n[2], w, h });
-  }
-  MT = null;
-  draw(hull(all), { fill: f.color, seed: f.seed + 70, lw: 5, amp: 1.2 });
-  list.sort((a, b) => a.nz - b.nz);
-  for (const s of list) {
-    MT = s.m;
-    draw(s.shape, { fill: f.color, seed: f.seed + 71 + s.F.id.length, lw: 3.2, amp: 1.2 });
-    ctx.save(); ctx.globalAlpha = .2 * (1 - s.nz); draw(s.shape, { fill: '#000', stroke: false, seed: f.seed + 71 + s.F.id.length, amp: 1.2 }); ctx.restore();
-    const id = s.F.id, sd = f.seed + 80;
-    if (id === 'front') {
-      drawFeatures(f, blink, mood);
-      for (let i = 0; i < f.hair; i++) line([[-28 + i * 24, -s.h / 2 + 3], [-29 + i * 24, -s.h / 2 + 12 + hash(sd + i) * 9]], sd + i, 2.6, .3);
-    } else if ((id === 'left' || id === 'right') && f.ears) {
-      draw(rr(0, -6, s.w * .42, s.h * .46, 18), { fill: f.color, seed: sd + 5, lw: 3.6, amp: 1 });
-      line(arc(2, -6, s.w * .09, s.h * .12, 70, 290), sd + 6, 3, .5);
-    } else if (id === 'top') {
-      for (let i = 0; i < f.hair + 1; i++) line([[-30 + i * 20, 6 + hash(sd + i) * 10], [-27 + i * 20, 24 + hash(sd + i + 4) * 12]], sd + 10 + i, 2.6, .3);
-    } else if (id === 'back') {
-      line(arc(0, -10, 16, 13, 20, 420, 16).map((p, i) => [p[0] * (1 - i * .035), p[1] * (1 - i * .035) - 6]), sd + 20, 3, .5);
-    }
-  }
-  MT = null;
+function disposeHead(hd) {
+  hd.root.traverse(o => o.userData.own && o.userData.own.dispose());
+  hd.geo.dispose(); hd.mat.dispose(); hd.matDark.dispose(); hd.matNose.dispose();
+  scene.remove(hd.root);
 }
 
-/* ---------- physics ---------- */
-const engine = Engine.create({ enableSleeping: false });
+/* ---------- physics (flat, on the plane of the screen) ---------- */
+const engine = Engine.create();
 engine.gravity.y = 1.15;
 const world = engine.world;
 let walls = [], floor = null, tipping = 0;
-const heads = [];                // { body, ch, yaw, pitch, wy, wp, yaw0, pitch0, k, blinkAt, blinkFor, mood, moodT, pop }
+const heads = [];
 const grabs = new Map();         // pointerId -> { head, con, x0, y0, t0, moved }
-let selected = null, count = 0;
+let selected = null;
 
 function layout() {
-  DPR = Math.min(window.devicePixelRatio || 1, 2.5);
   W = window.innerWidth; H = window.innerHeight;
-  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
-  SIDE = Math.max(62, Math.min(124, Math.min(W, H) / 5));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(W, H, false);
+  SIDE = Math.max(84, Math.min(170, Math.min(W, H) / 4.1));
+  // camera: far enough back that one world unit on the z=0 plane is one CSS pixel
+  const dist = (H / 2) / Math.tan(FOV * Math.PI / 360);
+  camera.aspect = W / H; camera.near = dist - 900; camera.far = dist + 900;
+  camera.position.set(W / 2, -H / 2, dist); camera.lookAt(W / 2, -H / 2, 0); camera.updateProjectionMatrix();
+  const L = Math.max(W, H);
+  key.position.set(W / 2 - L * .42, -H / 2 + L * .8, L * 1.05); key.target.position.set(W / 2, -H / 2, -SIDE * .4);
+  const sc = key.shadow.camera; sc.left = -L * .85; sc.right = L * .85; sc.top = L * .85; sc.bottom = -L * .85; sc.near = 1; sc.far = L * 4; sc.updateProjectionMatrix();
+  fill.position.set(W / 2 + L, -H / 2, L); fill.target.position.set(W / 2, -H / 2, 0);
+  wall.scale.set(L * 4, L * 4, 1); wall.position.set(W / 2, -H / 2, -SIDE * 1.25);
+  ground.scale.set(L * 4, SIDE * 4, 1); ground.position.set(W / 2, -(H - 6), -SIDE * .4);
+
   for (const w of walls) Composite.remove(world, w);
   if (floor) Composite.remove(world, floor);
   const T = 400;
@@ -381,31 +343,35 @@ function layout() {
     Bodies.rectangle(-T / 2, H / 2 - 2000, T, H + 8000, { isStatic: true }),
     Bodies.rectangle(W + T / 2, H / 2 - 2000, T, H + 8000, { isStatic: true }),
   ];
-  floor = Bodies.rectangle(W / 2, H - 10 + T / 2, W + 2 * T, T, { isStatic: true, friction: .8 });
+  floor = Bodies.rectangle(W / 2, H - 6 + T / 2, W + 2 * T, T, { isStatic: true, friction: .8 });
   Composite.add(world, walls);
   if (!tipping) Composite.add(world, floor);
 }
-const maxHeads = () => Math.min(90, Math.floor(W * H / (SIDE * SIDE) * .82));
+const maxHeads = () => Math.min(60, Math.floor(W * H / (SIDE * SIDE) * .8));
 
 function spawn(x, y) {
   if (heads.length >= maxHeads()) { wiggle($('tip')); return null; }
-  const ch = newChar(), k = SIDE / 150 * rnd(.86, 1.14);
-  const w = ch.fw * k, h = ch.fh * k;
+  const w = SIDE * rnd(.9, 1.12), h = w * rnd(.86, 1.06), d = w * rnd(.68, .86), r = w * rnd(.15, .26);
   x = Math.max(w / 2 + 4, Math.min(W - w / 2 - 4, x));
   const body = Bodies.rectangle(x, y == null ? -h : y, w, h, {
-    chamfer: { radius: ch.r * k }, restitution: .22, friction: .55, frictionAir: .008, density: .002, angle: rnd(-.5, .5),
+    chamfer: { radius: r }, restitution: .16, friction: .6, frictionAir: .008, density: .002, angle: rnd(-.5, .5),
   });
   Body.setAngularVelocity(body, rnd(-.06, .06));
-  const hd = { body, ch, k, yaw: rnd(-2, 2), pitch: rnd(-1, 1), wy: rnd(-5, 5), wp: rnd(-3, 3), yaw0: rnd(-.42, .42), pitch0: rnd(-.3, .22), blinkAt: rnd(.5, 4), blinkFor: 0, mood: null, moodT: 0, pop: 0 };
+  const hd = makeHead(pick(CLAY), w, h, d, r);
+  Object.assign(hd, {
+    body, yaw: rnd(-2, 2), pitch: rnd(-1, 1), wy: rnd(-5, 5), wp: rnd(-3, 3), yaw0: rnd(-.16, .16), pitch0: rnd(-.12, .1),
+    blinkAt: rnd(.5, 4), blinkFor: 0, mood: null, moodT: 0, pop: 0,
+    name: pick(FIRST) + ' ' + pick(LAST), job: pick(JOBS), likes: pick(LIKES), fear: pick(FEARS), plan: pick(PLANS),
+  });
   body.head = hd;
-  heads.push(hd); Composite.add(world, body);
-  count++; $('n').textContent = heads.length;
-  blip(rnd(380, 560), 170, .12, .2);
+  heads.push(hd); Composite.add(world, body); scene.add(hd.root);
+  $('n').textContent = heads.length;
+  blip(rnd(300, 420), 140, .13, .2);
   return hd;
 }
 function removeHead(hd) {
   const i = heads.indexOf(hd); if (i < 0) return;
-  heads.splice(i, 1); Composite.remove(world, hd.body);
+  heads.splice(i, 1); Composite.remove(world, hd.body); disposeHead(hd);
   for (const [id, g] of grabs) if (g.head === hd) { Composite.remove(world, g.con); grabs.delete(id); }
   if (selected === hd) closeCard();
   $('n').textContent = heads.length;
@@ -417,8 +383,8 @@ Events.on(engine, 'collisionStart', ev => {
     const a = p.bodyA, b = p.bodyB;
     const sp = Math.hypot(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
     if (sp < 5) continue;
-    for (const bd of [a, b]) if (bd.head && sp > 9) { bd.head.mood = 'ouch'; bd.head.moodT = .55; }
-    if (t - lastThud > .05) { lastThud = t; blip(130, 55, .09, Math.min(.2, sp / 110)); }
+    for (const bd of [a, b]) if (bd.head && sp > 9) { bd.head.mood = 'grim'; bd.head.moodT = .55; }
+    if (t - lastThud > .05) { lastThud = t; blip(105, 48, .1, Math.min(.22, sp / 100)); }   // soft clay thud
   }
 });
 
@@ -429,13 +395,13 @@ function step(dt) {
   for (let i = heads.length - 1; i >= 0; i--) {
     const h = heads[i], b = h.body;
     if (b.position.y > H + 400 || b.position.y < -6000) { removeHead(h); continue; }
-    h.pop = Math.min(1, h.pop + dt * 7);
+    h.pop = Math.min(1, h.pop + dt * 6);
     const vx = b.velocity.x * 60, vy = b.velocity.y * 60, sp = Math.hypot(vx, vy);
-    const held = [...grabs.values()].some(g => g.head === h);
-    if (sp > 170 || held && sp > 60) {
+    h.held = false; for (const g of grabs.values()) if (g.head === h) h.held = true;
+    if (sp > 190 || h.held && sp > 70) {
       // tumbling: spin follows the direction of travel
-      h.wy += (vx * .0075 - h.wy) * Math.min(1, dt * 3);
-      h.wp += (-vy * .0045 - h.wp) * Math.min(1, dt * 3);
+      h.wy += (vx * .006 - h.wy) * Math.min(1, dt * 3);
+      h.wp += (vy * .0035 - h.wp) * Math.min(1, dt * 3);
     } else {
       // settling: turn the short way back to this head's resting pose, face to the viewer
       const ty = Math.round((h.yaw - h.yaw0) / 6.283) * 6.283 + h.yaw0, tp = Math.round((h.pitch - h.pitch0) / 6.283) * 6.283 + h.pitch0;
@@ -444,47 +410,43 @@ function step(dt) {
     }
     h.yaw += h.wy * dt; h.pitch += h.wp * dt;
     h.blinkAt -= dt; h.blinkFor -= dt;
-    if (h.blinkAt < 0) { h.blinkFor = .13; h.blinkAt = rnd(1.5, 5); }
-    if (h.moodT > 0) { h.moodT -= dt; if (h.moodT <= 0 && !held) h.mood = null; }
+    if (h.blinkAt < 0) { h.blinkFor = .14; h.blinkAt = rnd(1.5, 5); }
+    if (h.moodT > 0) { h.moodT -= dt; if (h.moodT <= 0 && !h.held) h.mood = null; }
   }
 }
 
-function render() {
-  ctx = mainCtx;
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  ctx.clearRect(0, 0, W, H);
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  // the box
-  const y = H - 9, r = 26;
-  line([[5, -10], [5, y - r]].concat(arc(5 + r, y - r, r, r, 180, 90, 6), tipping ? [] : [[W / 2, y]], arc(W - 5 - r, y - r, r, r, 90, 0, 6), [[W - 5, -10]]), 900, 3.4, 1.4);
+let boilT = 0, boilNow = false;
+function sync(dt) {
+  boilT += dt; boilNow = false;
+  if (!reduce && boilT > .11) { boilT = 0; boilNow = true; }   // faces are re-posed a few times a second, like stop motion
   for (const h of heads) {
-    const b = h.body, s = h.k * (reduce ? 1 : .55 + .45 * (1 + .25 * Math.sin(h.pop * Math.PI)) * h.pop);
-    ctx.save();
-    ctx.translate(b.position.x, b.position.y);
-    ctx.scale(s, s);
-    if (h === selected) { ctx.shadowColor = 'rgba(23,22,20,.9)'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 5 * DPR; ctx.shadowOffsetY = 6 * DPR; }
-    drawHead(h.ch, rot(b.angle, h.pitch, h.yaw), h.blinkFor > 0, h.mood);
-    ctx.restore();
+    const b = h.body;
+    // the front of the head sits on the plane of the screen, so what you touch is what the physics sees
+    h.root.position.set(b.position.x, -b.position.y, -h.d / 2 + (h === selected ? h.d * .25 : 0));
+    h.root.rotation.set(h.pitch, h.yaw, -b.angle);
+    let s = reduce ? 1 : .5 + .5 * (1 + .22 * Math.sin(h.pop * Math.PI)) * h.pop;
+    if (h === selected) s *= 1.06 + (reduce ? 0 : .02 * Math.sin(t * 5));
+    h.root.scale.setScalar(s);
+    const blink = h.blinkFor > 0, m = h.mood;
+    h.mouths.base.visible = !m; h.mouths.oh.visible = m === 'oh'; h.mouths.grim.visible = m === 'grim';
+    for (const e of h.eyes) {
+      e.userData.lid.visible = blink && !m;
+      const k = m === 'oh' ? 1.22 : 1;
+      e.scale.set(k, m === 'grim' ? .42 : k, k);
+    }
+    if (boilNow) { h.face.rotation.z = rnd(-.014, .014); h.face.position.set(rnd(-.4, .4), rnd(-.4, .4), 0); }
   }
-  if (selected) {
-    ctx = pctx;
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, 208, 208);
-    ctx.translate(104, 104); ctx.scale(.86, .86);
-    const tt = reduce ? .6 : t;
-    drawHead(selected.ch, rot(Math.sin(tt * .9) * .08, Math.sin(tt * .7) * .32 - .1, Math.sin(tt * 1.1) * .95), selected.blinkFor > 0, selected.mood);
-    ctx = mainCtx;
-  }
+  renderer.render(scene, camera);
 }
 
 /* ---------- sound ---------- */
-let ac = null, soundOn = true;
+let ac = null, soundOn = true, armed = false;   // browsers only allow sound after a first touch
 function audio() {
   if (!soundOn) return null;
   if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
   if (ac.state === 'suspended') ac.resume();
   return ac;
 }
-let armed = false;                  // browsers only allow sound after a first touch
 function blip(f0, f1, dur, vol, type = 'sine') {
   if (!armed) return;
   const a = audio(); if (!a) return;
@@ -493,25 +455,26 @@ function blip(f0, f1, dur, vol, type = 'sine') {
   g.gain.setValueAtTime(vol, now); g.gain.exponentialRampToValueAtTime(.001, now + dur);
   o.connect(g).connect(a.destination); o.start(now); o.stop(now + dur + .02);
 }
-function wiggle(el) { if (el.animate) el.animate([{ transform: 'rotate(-7deg) scale(1.15)' }, { transform: 'rotate(6deg) scale(1.15)' }, { transform: 'none' }], { duration: 350 }); }
+function wiggle(el) { if (el.animate) el.animate([{ transform: 'rotate(-6deg) scale(1.12)' }, { transform: 'rotate(5deg) scale(1.12)' }, { transform: 'none' }], { duration: 350 }); }
 
 /* ---------- character card ---------- */
 function openCard(h) {
-  selected = h; const c = h.ch;
-  $('cname').textContent = c.name; $('cjob').textContent = c.job;
-  $('clikes').textContent = c.likes; $('cfear').textContent = c.fear; $('cplan').textContent = c.plan;
+  selected = h;
+  $('cname').textContent = h.name; $('cjob').textContent = h.job;
+  $('clikes').textContent = h.likes; $('cfear').textContent = h.fear; $('cplan').textContent = h.plan;
+  $('chip').style.background = h.color;
   const card = $('card'); card.hidden = true; void card.offsetWidth; card.hidden = false;
-  blip(300, 450, .08, .12, 'triangle');
+  blip(300, 450, .08, .1, 'triangle');
 }
 function closeCard() { selected = null; $('card').hidden = true; }
 $('close').addEventListener('click', closeCard);
-$('pull').addEventListener('click', () => { if (!selected) return; rollFace(selected.ch); selected.mood = null; blip(260, 520, .08, .12, 'triangle'); });
+$('pull').addEventListener('click', () => { if (!selected) return; buildFace(selected); selected.mood = null; selected.pop = .55; blip(260, 520, .08, .1, 'triangle'); });
 $('toss').addEventListener('click', () => {
   if (!selected) return;
   const b = selected.body;
-  Body.setVelocity(b, { x: rnd(-14, 14), y: -rnd(22, 30) }); Body.setAngularVelocity(b, rnd(-.4, .4));
-  selected.mood = 'wow'; selected.moodT = 1.2;
-  blip(200, 700, .18, .15, 'triangle');
+  Body.setVelocity(b, { x: rnd(-14, 14), y: -rnd(24, 32) }); Body.setAngularVelocity(b, rnd(-.4, .4));
+  selected.mood = 'oh'; selected.moodT = 1.2;
+  blip(200, 700, .18, .12, 'triangle');
 });
 
 /* ---------- input ---------- */
@@ -526,8 +489,7 @@ cv.addEventListener('pointerdown', e => {
     const con = Constraint.create({ pointA: p, bodyB: body, pointB: { x: dx * c - dy * s, y: dx * s + dy * c }, length: 0, stiffness: .12, damping: .12 });
     Composite.add(world, con);
     grabs.set(e.pointerId, { head: h, con, x0: p.x, y0: p.y, t0: performance.now(), moved: false });
-    h.mood = 'wow'; h.moodT = 99;
-    heads.splice(heads.indexOf(h), 1); heads.push(h);   // bring to the front
+    h.mood = 'oh'; h.moodT = 99;
   } else if (selected) closeCard();
   else { spawn(p.x); $('hint').classList.add('gone'); }
 });
@@ -553,27 +515,25 @@ $('tip').addEventListener('click', e => {
   armed = true; closeCard();
   if (!tipping) Composite.remove(world, floor);
   tipping = 1.5;
-  for (const h of heads) { h.mood = 'wow'; h.moodT = 1.5; Body.setVelocity(h.body, { x: h.body.velocity.x + rnd(-2, 2), y: h.body.velocity.y + 1 }); }
-  blip(500, 90, .4, .15, 'triangle'); e.currentTarget.blur();
+  for (const h of heads) { h.mood = 'oh'; h.moodT = 1.5; Body.setVelocity(h.body, { x: h.body.velocity.x + rnd(-2, 2), y: h.body.velocity.y + 1 }); }
+  blip(500, 90, .4, .12, 'triangle'); e.currentTarget.blur();
 });
 const sb = $('sound');
 sb.addEventListener('click', () => { soundOn = !soundOn; armed = true; sb.textContent = soundOn ? 'Sound on' : 'Sound off'; sb.blur(); });
 window.addEventListener('resize', layout);
 
 /* ---------- loop ---------- */
-let last = performance.now(), boilT = 0, acc = 0;
+let last = performance.now(), acc = 0;
 function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now;
-  if (!reduce) { boilT += dt; if (boilT > .16) { boilT = 0; boil++; } }
   acc += dt; let n = 0;
   while (acc >= 1 / 120 && n++ < 8) { step(1 / 120); acc -= 1 / 120; }
   if (n >= 8) acc = 0;
-  render();
+  sync(dt);
   requestAnimationFrame(frame);
 }
 layout();
-// start with a few heads already on their way down, like the sketch
-for (let i = 0; i < 5; i++) spawn(W * (.16 + .17 * i) + rnd(-20, 20), -SIDE * (1 + i * 1.3));
+for (let i = 0; i < 3; i++) spawn(W * (.22 + .28 * i) + rnd(-15, 15), -SIDE * (1 + i * 1.4));   // a few already on their way down
 requestAnimationFrame(frame);
 })();
 </script>
