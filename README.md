@@ -1,9 +1,10 @@
-# Face Dispenser
+# Head Dispenser
 
-A little clay-face toy drawn like a sketchbook page. Open `index.html` in a browser.
+A box of blocky character heads, drawn like a sketchbook page. Open `index.html` in a browser.
 
-- **Press and hold** (or hold Space): the face is squeezed out of the head's window until it drops off and a new one takes its place. Keep holding to keep dispensing.
-- **Quick tap**: the face pokes out, springs back, and comes back with a new expression.
-- **Tap a fallen face** to flick it around the pile.
+- **Tap empty space** (or press Space): a head drops into the box. Keep going until the screen is full.
+- **Drag a head** to carry or throw it. Heads are 3D boxes: they tumble while moving and settle facing you.
+- **Tap a head** to open its character card (name, job, likes, fears, real intentions). From there you can make it pull a new face or throw it.
+- **Tip out** empties the box.
 
-No build step and no dependencies: everything is in `index.html` (canvas drawing, physics, and synthesized sound).
+No build step. Everything is in `index.html`; the 2D physics uses Matter.js from a CDN, and the 3D drawing is hand-rolled on a canvas.
